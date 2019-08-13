@@ -35,7 +35,8 @@ interface RedditApi {
     @GET("/r/{subreddit}/hot.json")
     fun getTop(
             @Path("subreddit") subreddit: String,
-            @Query("limit") limit: Int): Call<ListingResponse>
+            @Query("limit") limit: Int
+    ): Call<ListingResponse>
 
     // for after/before param, either get from RedditDataResponse.after/before,
     // or pass RedditNewsDataResponse.name (though this is technically incorrect)
@@ -43,13 +44,15 @@ interface RedditApi {
     fun getTopAfter(
             @Path("subreddit") subreddit: String,
             @Query("after") after: String,
-            @Query("limit") limit: Int): Call<ListingResponse>
+            @Query("limit") limit: Int
+    ): Call<ListingResponse>
 
     @GET("/r/{subreddit}/hot.json")
     fun getTopBefore(
             @Path("subreddit") subreddit: String,
             @Query("before") before: String,
-            @Query("limit") limit: Int): Call<ListingResponse>
+            @Query("limit") limit: Int
+    ): Call<ListingResponse>
 
     class ListingResponse(val data: ListingData)
 
@@ -64,6 +67,7 @@ interface RedditApi {
     companion object {
         private const val BASE_URL = "https://www.reddit.com/"
         fun create(): RedditApi = create(HttpUrl.parse(BASE_URL)!!)
+
         fun create(httpUrl: HttpUrl): RedditApi {
             val logger = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger {
                 Log.d("API", it)

@@ -28,10 +28,9 @@ import com.android.example.paging.pagingwithnetwork.reddit.vo.RedditPost
 /**
  * A simple adapter implementation that shows Reddit posts.
  */
-class PostsAdapter(
-        private val glide: GlideRequests,
-        private val retryCallback: () -> Unit)
+class PostsAdapter(private val glide: GlideRequests, private val retryCallback: () -> Unit)
     : PagedListAdapter<RedditPost, RecyclerView.ViewHolder>(POST_COMPARATOR) {
+
     private var networkState: NetworkState? = null
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (getItemViewType(position)) {
@@ -41,10 +40,7 @@ class PostsAdapter(
         }
     }
 
-    override fun onBindViewHolder(
-            holder: RecyclerView.ViewHolder,
-            position: Int,
-            payloads: MutableList<Any>) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
         if (payloads.isNotEmpty()) {
             val item = getItem(position)
             (holder as RedditPostViewHolder).updateScore(item)
@@ -61,6 +57,9 @@ class PostsAdapter(
         }
     }
 
+    /**
+     * 当networkState 不等于 NetworkState.LOADED时，都存在ExtraRow，其实就是 loadingVIew
+     */
     private fun hasExtraRow() = networkState != null && networkState != NetworkState.LOADED
 
     override fun getItemViewType(position: Int): Int {
@@ -75,18 +74,26 @@ class PostsAdapter(
         return super.getItemCount() + if (hasExtraRow()) 1 else 0
     }
 
+    /**
+     * 更新结果
+     */
     fun setNetworkState(newNetworkState: NetworkState?) {
         val previousState = this.networkState
         val hadExtraRow = hasExtraRow()
         this.networkState = newNetworkState
         val hasExtraRow = hasExtraRow()
         if (hadExtraRow != hasExtraRow) {
+            // 有无 loading 发生了变化
             if (hadExtraRow) {
+                // 移除 loading
                 notifyItemRemoved(super.getItemCount())
             } else {
+                // 加入 loading
                 notifyItemInserted(super.getItemCount())
             }
         } else if (hasExtraRow && previousState != newNetworkState) {
+            // 未发生变化，并且 当前存在loading，并且 是新加的loading
+            // 从 laoding 到 loadingError  或者 反过来
             notifyItemChanged(itemCount - 1)
         }
     }

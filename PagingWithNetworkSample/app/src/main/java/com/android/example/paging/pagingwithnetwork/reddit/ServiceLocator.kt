@@ -90,9 +90,13 @@ open class DefaultServiceLocator(val app: Application, val useInMemoryDb: Boolea
             RedditPostRepository.Type.IN_MEMORY_BY_ITEM -> InMemoryByItemRepository(
                     redditApi = getRedditApi(),
                     networkExecutor = getNetworkExecutor())
+
+
             RedditPostRepository.Type.IN_MEMORY_BY_PAGE -> InMemoryByPageKeyRepository(
                     redditApi = getRedditApi(),
                     networkExecutor = getNetworkExecutor())
+
+
             RedditPostRepository.Type.DB -> DbRedditPostRepository(
                     db = db,
                     redditApi = getRedditApi(),

@@ -19,6 +19,7 @@ package com.android.example.paging.pagingwithnetwork.reddit.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import androidx.activity.viewModels
@@ -42,6 +43,7 @@ import kotlinx.android.synthetic.main.activity_reddit.*
  */
 class RedditActivity : AppCompatActivity() {
     companion object {
+        private val TAG = RedditActivity::class.java.simpleName
         const val KEY_SUBREDDIT = "subreddit"
         const val DEFAULT_SUBREDDIT = "androiddev"
         const val KEY_REPOSITORY_TYPE = "repository_type"
@@ -78,24 +80,40 @@ class RedditActivity : AppCompatActivity() {
     private fun initAdapter() {
         val glide = GlideApp.with(this)
         val adapter = PostsAdapter(glide) {
+            // 重试
+            Log.d(TAG, "initAdapter  -->  retry")
             model.retry()
         }
         list.adapter = adapter
         model.posts.observe(this, Observer<PagedList<RedditPost>> {
+
+            Log.d(TAG, "initAdapter  -->  posts.observe  size = ${it.size}")
             adapter.submitList(it)
         })
+
+
         model.networkState.observe(this, Observer {
+            Log.d(TAG, "initAdapter  -->  networkState.observe  state = $it")
+            // 监听 网络状态的变化
             adapter.setNetworkState(it)
         })
     }
 
     private fun initSwipeToRefresh() {
+        // 下拉刷新
         model.refreshState.observe(this, Observer {
+            // 下拉刷新的结果
+            Log.d(TAG, "initSwipeToRefresh  -->  observe  refreshState = $it")
             swipe_refresh.isRefreshing = it == NetworkState.LOADING
         })
+
         swipe_refresh.setOnRefreshListener {
+            Log.d(TAG, "initSwipeToRefresh  -->  setOnRefreshListener")
+
+            // 触发刷新
             model.refresh()
         }
+
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -105,6 +123,8 @@ class RedditActivity : AppCompatActivity() {
 
     private fun initSearch() {
         input.setOnEditorActionListener { _, actionId, _ ->
+
+            Log.d(TAG, "initSearch  -->  setOnEditorActionListener")
             if (actionId == EditorInfo.IME_ACTION_GO) {
                 updatedSubredditFromInput()
                 true
@@ -112,7 +132,10 @@ class RedditActivity : AppCompatActivity() {
                 false
             }
         }
+
         input.setOnKeyListener { _, keyCode, event ->
+
+            Log.d(TAG, "initSearch  -->  setOnEditorActionListener")
             if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                 updatedSubredditFromInput()
                 true
@@ -125,6 +148,7 @@ class RedditActivity : AppCompatActivity() {
     private fun updatedSubredditFromInput() {
         input.text.trim().toString().let {
             if (it.isNotEmpty()) {
+                Log.d(TAG, "updatedSubredditFromInput  --> start showSubreddit $it ")
                 if (model.showSubreddit(it)) {
                     list.scrollToPosition(0)
                     (list.adapter as? PostsAdapter)?.submitList(null)

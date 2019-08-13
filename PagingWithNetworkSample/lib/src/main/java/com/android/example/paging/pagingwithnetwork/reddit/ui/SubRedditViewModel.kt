@@ -16,6 +16,7 @@
 
 package com.android.example.paging.pagingwithnetwork.reddit.ui
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations.map
 import androidx.lifecycle.Transformations.switchMap
@@ -23,18 +24,42 @@ import androidx.lifecycle.ViewModel
 import com.android.example.paging.pagingwithnetwork.reddit.repository.RedditPostRepository
 
 class SubRedditViewModel(private val repository: RedditPostRepository) : ViewModel() {
+
+    companion object {
+        private val TAG = SubRedditViewModel::class.java.simpleName
+    }
+
+    /**
+     * 存储的是 搜索的值
+     */
     private val subredditName = MutableLiveData<String>()
+
+    /**
+     * Listing<RedditPost>
+     */
     private val repoResult = map(subredditName) {
+
+        Log.d(TAG, "repoResult  subredditName = $it")
         repository.postsOfSubreddit(it, 30)
     }
-    val posts = switchMap(repoResult, { it.pagedList })!!
+
+    val posts = switchMap(repoResult, {
+        it.pagedList
+    })!!
+
     val networkState = switchMap(repoResult, { it.networkState })!!
+
     val refreshState = switchMap(repoResult, { it.refreshState })!!
 
     fun refresh() {
         repoResult.value?.refresh?.invoke()
     }
 
+    /**
+     * 更新 搜索的值。然后触发 数据请求
+     *
+     * 如果数据未变化，则不请求
+     */
     fun showSubreddit(subreddit: String): Boolean {
         if (subredditName.value == subreddit) {
             return false
@@ -43,6 +68,9 @@ class SubRedditViewModel(private val repository: RedditPostRepository) : ViewMod
         return true
     }
 
+    /**
+     * 重试
+     */
     fun retry() {
         val listing = repoResult?.value
         listing?.retry?.invoke()

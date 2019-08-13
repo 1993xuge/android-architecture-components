@@ -40,6 +40,7 @@ class SubredditBoundaryCallback(
         private val handleResponse: (String, RedditApi.ListingResponse?) -> Unit,
         private val ioExecutor: Executor,
         private val networkPageSize: Int)
+
     : PagedList.BoundaryCallback<RedditPost>() {
 
     val helper = PagingRequestHelper(ioExecutor)
@@ -76,9 +77,7 @@ class SubredditBoundaryCallback(
      * every time it gets new items, boundary callback simply inserts them into the database and
      * paging library takes care of refreshing the list if necessary.
      */
-    private fun insertItemsIntoDb(
-            response: Response<RedditApi.ListingResponse>,
-            it: PagingRequestHelper.Request.Callback) {
+    private fun insertItemsIntoDb(response: Response<RedditApi.ListingResponse>, it: PagingRequestHelper.Request.Callback) {
         ioExecutor.execute {
             handleResponse(subredditName, response.body())
             it.recordSuccess()
@@ -89,18 +88,13 @@ class SubredditBoundaryCallback(
         // ignored, since we only ever append to what's in the DB
     }
 
-    private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
-            : Callback<RedditApi.ListingResponse> {
+    private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback): Callback<RedditApi.ListingResponse> {
         return object : Callback<RedditApi.ListingResponse> {
-            override fun onFailure(
-                    call: Call<RedditApi.ListingResponse>,
-                    t: Throwable) {
+            override fun onFailure(call: Call<RedditApi.ListingResponse>, t: Throwable) {
                 it.recordFailure(t)
             }
 
-            override fun onResponse(
-                    call: Call<RedditApi.ListingResponse>,
-                    response: Response<RedditApi.ListingResponse>) {
+            override fun onResponse(call: Call<RedditApi.ListingResponse>, response: Response<RedditApi.ListingResponse>) {
                 insertItemsIntoDb(response, it)
             }
         }
